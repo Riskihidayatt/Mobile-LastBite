@@ -2,6 +2,8 @@ import React, { useContext, useState } from 'react';
 import { View, Text, SafeAreaView, FlatList, TouchableOpacity, Image } from 'react-native';
 import { ThemeContext } from '../../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
+import {colors} from "../../assets/colors";
+import {LinearGradient} from "expo-linear-gradient";
 
 // Placeholder data for past orders
 const pastOrders = [
@@ -99,7 +101,11 @@ const OrderScreen = () => {
     });
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <LinearGradient
+            colors={isDarkMode ? colors.gradientDark : colors.gradientLight}
+            style={{ flex: 1 }}
+        >
+            <SafeAreaView className="flex-1">
             {/* Header */}
             <View className="py-4 border-b border-gray-200 dark:border-gray-700">
                 <Text className="text-xl font-bold text-center text-gray-800 dark:text-white">Pesanan</Text>
@@ -146,6 +152,7 @@ const OrderScreen = () => {
                 contentContainerStyle={{ paddingVertical: 20 }}
             />
         </SafeAreaView>
+            </LinearGradient>
     );
 };
 

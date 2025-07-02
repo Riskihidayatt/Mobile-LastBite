@@ -58,6 +58,20 @@ const CartScreen = ({ route }) => {
                     ))}
                 </View>
 
+                {/* Customer Notes */}
+                <View className="bg-white dark:bg-gray-800 rounded-2xl shadow-md shadow-gray-200 mx-5 mt-6 p-5">
+                    <Text className="text-xl font-bold text-gray-800 dark:text-white mb-4">Catatan untuk Penjual</Text>
+                    <TextInput
+                        className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-800 dark:text-white"
+                        placeholder="Tambahkan catatan di sini..."
+                        placeholderTextColor={isDarkMode ? '#A0A0A0' : '#808080'}
+                        multiline
+                        numberOfLines={4}
+                        value={customerNotes}
+                        onChangeText={setCustomerNotes}
+                    />
+                </View>
+
                 {/* Order Summary */}
                 <View className="bg-white dark:bg-gray-800 rounded-2xl shadow-md shadow-gray-200 mx-5 mt-6 p-5">
                     <Text className="text-xl font-bold text-gray-800 dark:text-white mb-4">Ringkasan Pesanan</Text>
@@ -77,19 +91,7 @@ const CartScreen = ({ route }) => {
                     </View>
                 </View>
 
-                {/* Customer Notes */}
-                <View className="bg-white dark:bg-gray-800 rounded-2xl shadow-md shadow-gray-200 mx-5 mt-6 p-5">
-                    <Text className="text-xl font-bold text-gray-800 dark:text-white mb-4">Catatan untuk Penjual</Text>
-                    <TextInput
-                        className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-800 dark:text-white"
-                        placeholder="Tambahkan catatan di sini..."
-                        placeholderTextColor={isDarkMode ? '#A0A0A0' : '#808080'}
-                        multiline
-                        numberOfLines={4}
-                        value={customerNotes}
-                        onChangeText={setCustomerNotes}
-                    />
-                </View>
+
             </ScrollView>
 
             {/* Checkout Button */}
