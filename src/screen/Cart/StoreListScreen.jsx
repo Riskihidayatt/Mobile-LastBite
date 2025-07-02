@@ -3,7 +3,8 @@ import { View, Text, SafeAreaView, ScrollView } from 'react-native';
 import { ThemeContext } from '../../context/ThemeContext';
 import StoreCard from '../../components/StoreCard';
 
-// Placeholder data for stores
+
+
 const stores = [
     {
         id: '1',

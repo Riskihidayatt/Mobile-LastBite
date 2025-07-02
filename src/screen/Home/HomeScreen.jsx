@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../assets/colors';
 import { Ionicons } from '@expo/vector-icons';
-import FoodCard from '../../components/FoodCard'; // Pastikan komponen ini sudah sesuai style-nya
+import FoodCard from '../../components/FoodCard';
 import { ThemeContext } from '../../context/ThemeContext';
 
 const recommendations = [

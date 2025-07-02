@@ -3,6 +3,8 @@ import { View, Text, SafeAreaView, ScrollView, Image, TouchableOpacity, TextInpu
 import { Feather } from '@expo/vector-icons';
 import { ThemeContext } from '../../context/ThemeContext';
 import { useCart } from '../../hooks/useCart';
+import {LinearGradient} from "expo-linear-gradient";
+import { colors } from '../../assets/colors';
 
 const CartScreen = ({ route }) => {
     const { storeId, storeName } = route.params || {};
@@ -23,7 +25,11 @@ const CartScreen = ({ route }) => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <LinearGradient
+            colors={isDarkMode ? colors.gradientDark : colors.gradientLight}
+            style={{ flex: 1 }}
+        >
+        <SafeAreaView className="flex-1">
             {/* Header */}
             <View className="py-4 border-b border-gray-200 dark:border-gray-700">
                 <Text className="text-xl font-bold text-center text-gray-800 dark:text-white">Keranjang Saya {storeName ? `(${storeName})` : ''}</Text>
@@ -93,6 +99,7 @@ const CartScreen = ({ route }) => {
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
+        </LinearGradient>
     );
 };
 

@@ -7,17 +7,26 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screen/Home/HomeScreen';
 import DetailMenuScreen from '../screen/Home/DetailMenuScreen';
 import OrderScreen from '../screen/Order/OrderScreen';
+import RatingScreen from '../screen/Order/RatingScreen';
 import CartStack from './CartStack';
 import ProfileScreen from "../screen/Profile/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
+const OrderStack = createNativeStackNavigator();
 
 const HomeStackScreen = () => (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
         <HomeStack.Screen name="HomeMain" component={HomeScreen} />
         <HomeStack.Screen name="DetailMenu" component={DetailMenuScreen} />
     </HomeStack.Navigator>
+);
+
+const OrderStackScreen = () => (
+    <OrderStack.Navigator screenOptions={{ headerShown: false }}>
+        <OrderStack.Screen name="OrderMain" component={OrderScreen} />
+        <OrderStack.Screen name="RatingScreen" component={RatingScreen} />
+    </OrderStack.Navigator>
 );
 
 const BottomTabNavigator = () => {
@@ -57,7 +66,7 @@ const BottomTabNavigator = () => {
             })}
         >
             <Tab.Screen name="Home" component={HomeStackScreen} />
-            <Tab.Screen name="Order" component={OrderScreen} />
+            <Tab.Screen name="Order" component={OrderStackScreen} />
             <Tab.Screen name="Cart" component={CartStack} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
