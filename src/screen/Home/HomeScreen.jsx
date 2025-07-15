@@ -1,144 +1,397 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../../assets/colors';
-import { Ionicons } from '@expo/vector-icons';
-import FoodCard from '../../components/FoodCard';
-import { ThemeContext } from '../../context/ThemeContext';
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../assets/colors";
+import { Ionicons } from "@expo/vector-icons";
+import FoodCard from "../../components/FoodCard";
+import { ThemeContext } from "../../context/ThemeContext";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchMenuItems } from "../../redux/slice/menuSlice";
+import { useNavigation } from "@react-navigation/native";
+import getDataLocation from "../../utils/getDataLocation";
+import Screen from "../Screen";
+import AutoHide from "../../components/common/AutoHide";
+import LocationBottomSheet from "../../components/LocationBottomSheet";
+import FilterBottomSheet from "../../components/FilterBottomSheet";
 
-const recommendations = [
-    {
-        id: '1',
-        title: 'Ayam Bakar',
-        image: 'https://images.unsplash.com/photo-1605478031248-78e5a6a9b275?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: '2',
-        title: 'Nasi Goreng',
-        image: 'https://images.unsplash.com/photo-1620207418302-439b387441b0?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: '3',
-        title: 'Sate Ayam',
-        image: 'https://images.unsplash.com/photo-1589308078056-eb7d38ac5be0?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: '4',
-        title: 'Ayam Bakar',
-        image: 'https://images.unsplash.com/photo-1605478031248-78e5a6a9b275?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: '5',
-        title: 'Nasi Goreng',
-        image: 'https://images.unsplash.com/photo-1620207418302-439b387441b0?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: '6',
-        title: 'Sate Ayam',
-        image: 'https://images.unsplash.com/photo-1589308078056-eb7d38ac5be0?auto=format&fit=crop&w=400&q=80',
-    },
-];
-
-
-const restaurants = [
-    { id: '1', name: 'Warung Cak Jo', storeId: '1', storeName: 'Warung Cak Jo', dish: 'Nasi ayam gulai', price: 7000, oldPrice: 20000, image: 'https://picsum.photos/seed/food1/400/200', description: 'Nasi ayam gulai dengan bumbu khas Warung Cak Jo, disajikan dengan sambal terasi dan lalapan.', rating: 4.9 },
-    { id: '2', name: 'Soto Lamongan', storeId: '2', storeName: 'Soto Lamongan', dish: 'Soto Ayam', price: 12000, oldPrice: 15000, image: 'https://picsum.photos/seed/food2/400/200', description: 'Soto ayam Lamongan dengan kuah kuning kental, disajikan dengan koya dan sambal.', rating: 4.7 },
-    { id: '3', name: 'Warung Cak Jo', storeId: '1', storeName: 'Warung Cak Jo', dish: 'Nasi ayam gulai', price: 7000, oldPrice: 20000, image: 'https://picsum.photos/seed/food1/400/200', description: 'Nasi ayam gulai dengan bumbu khas Warung Cak Jo, disajikan dengan sambal terasi dan lalapan.', rating: 4.9 },
-    { id: '4', name: 'Soto Lamongan', storeId: '2', storeName: 'Soto Lamongan', dish: 'Soto Ayam', price: 12000, oldPrice: 15000, image: 'https://picsum.photos/seed/food2/400/200', description: 'Soto ayam Lamongan dengan kuah kuning kental, disajikan dengan koya dan sambal.', rating: 4.7 },
-    { id: '5', name: 'Warung Cak Jo', storeId: '1', storeName: 'Warung Cak Jo', dish: 'Nasi ayam gulai', price: 7000, oldPrice: 20000, image: 'https://picsum.photos/seed/food1/400/200', description: 'Nasi ayam gulai dengan bumbu khas Warung Cak Jo, disajikan dengan sambal terasi dan lalapan.', rating: 4.9 },
-    { id: '6', name: 'Soto Lamongan', storeId: '2', storeName: 'Soto Lamongan', dish: 'Soto Ayam', price: 12000, oldPrice: 15000, image: 'https://picsum.photos/seed/food2/400/200', description: 'Soto ayam Lamongan dengan kuah kuning kental, disajikan dengan koya dan sambal.', rating: 4.7 },
-];
+const dummyMenuItems = [];
 
 const HomeScreen = () => {
-    const [activeFilter, setActiveFilter] = useState('All');
-    const filters = ['All', 'Food', 'Drink', 'Location'];
-    const { theme } = useContext(ThemeContext);
-    const isDarkMode = theme === 'dark';
+  const { theme } = useContext(ThemeContext);
+  const isDarkMode = theme === "dark";
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
 
-    const renderHeader = () => (
-        <View>
-            {/* Lokasi */}
-            <View className="flex-row items-center mt-2.5">
-                <Ionicons name="location-sharp" size={20} color={isDarkMode ? '#D1D5DB' : '#A9A9A9'} />
-                <Text className={`ml-2 font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-400'}`}>Malang, Jawa Timur</Text>
-            </View>
+  const { user } = useSelector((state) => state.user);
+  const {
+    items: menuItems,
+    status,
+    error,
+  } = useSelector((state) => state.menu);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [priceSort, setPriceSort] = useState(null);
+  const [ratingSort, setRatingSort] = useState(null);
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [location, setLocation] = useState("Lokasi tidak ditemukan");
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
 
-            {/* Search Bar with Filter */}
-            <View className="flex-row items-center mt-5 gap-3">
-                <View className={`flex-1 flex-row items-center rounded-xl px-4 py-3 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <Ionicons name="search" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-                    <TextInput
-                        placeholder="Cari makanan atau restoran..."
-                        className={`flex-1 ml-3 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
-                        placeholderTextColor={isDarkMode ? '#9CA3AF' : '#9CA3AF'}
-                    />
-                </View>
-                <TouchableOpacity className="w-12 h-12 bg-[#FF6B35] rounded-xl items-center justify-center shadow-sm">
-                    <Ionicons name="options-outline" size={20} color="white" />
-                </TouchableOpacity>
-            </View>
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await dispatch(fetchMenuItems());
+    setRefreshing(false);
+  }, [dispatch]);
 
-            {/* Filter Categories */}
-            <View className="flex-row gap-2 mt-5">
-                {filters.map((filter) => (
-                    <TouchableOpacity
-                        key={filter}
-                        className={`py-2 px-4 rounded-xl border ${
-                            activeFilter === filter
-                                ? 'bg-[#FF6B35] border-[#FF6B35]'
-                                : isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                        }`}
-                        onPress={() => setActiveFilter(filter)}
-                    >
-                        <Text
-                            className={`font-medium text-sm ${
-                                activeFilter === filter
-                                    ? 'text-white'
-                                    : isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                            }`}
-                        >
-                            {filter}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+  useEffect(() => {
+    const fetchLocationFromUser = async () => {
+      if (user?.latitude && user?.longitude) {
+        const dataLocation = await getDataLocation(user.latitude, user.longitude);
+        if (dataLocation) {
+          setLocation(`${dataLocation.address}`);
+        } else {
+          setLocation("Lokasi tidak ditemukan");
+        }
+      } else {
+        setLocation("Lokasi tidak ditemukan");
+      }
+    };
+    fetchLocationFromUser();
+  }, [user]);
 
-            {/* Rekomendasi */}
-            <Text className={`text-base font-bold mb-3 mt-6 ${isDarkMode ? 'text-green-400' : 'text-[#28A745]'}`}>Rekomendasi</Text>
-            <FlatList
-                data={recommendations}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View className={`w-36 mr-3 border rounded-xl p-2 shadow-sm ${isDarkMode ? 'bg-gray-800 border-gray-700 shadow-gray-900' : 'bg-white border-gray-200'}`}>
-                        <Image source={{ uri: item.image }} className="w-full h-24 rounded-lg" />
-                        <Text className={`font-semibold mt-2 text-sm ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{item.title}</Text>
-                        <Text className="text-[#E74C3C] font-semibold text-sm">Rp.7000</Text>
-                    </View>
-                )}
-            />
-        </View>
-    );
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchMenuItems());
+    }
+  }, [status, dispatch]);
 
+  useEffect(() => {
+    if (user?.longitude && user?.latitude) {
+      dispatch(fetchMenuItems({ longitude: user.longitude, latitude: user.latitude }));
+    }
+  }, [dispatch, user]);
+
+  const categories = useMemo(() => {
+    const allCategories = menuItems
+      .map((item) => item.category)
+      .filter(Boolean);
+    return [...new Set(allCategories)];
+  }, [menuItems]);
+
+  const filteredMenuItems = useMemo(() => {
+    let items = [...menuItems];
+
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      items = items.filter(
+        (item) =>
+          item.name.toLowerCase().includes(lowercasedQuery) ||
+          item.storeName.toLowerCase().includes(lowercasedQuery)
+      );
+    }
+
+    if (activeCategory !== "All") {
+      items = items.filter((item) => item.category === activeCategory);
+    }
+
+    if (priceSort === "lowest") {
+      items.sort((a, b) => a.price - b.price);
+    } else if (priceSort === "highest") {
+      items.sort((a, b) => b.price - a.price);
+    }
+
+    if (ratingSort === "highest") {
+      items.sort((a, b) => b.rating - a.rating);
+    } else if (ratingSort === "lowest") {
+      items.sort((a, b) => a.rating - b.rating);
+    }
+
+    return items;
+  }, [menuItems, searchQuery, activeCategory, priceSort, ratingSort]);
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const toggleFilterModal = () => {
+    setFilterModalVisible(!isFilterModalVisible);
+  };
+
+  const handleApplyFilters = () => {
+    // Filters are automatically applied through useMemo
+    // This function can be used for additional logic if needed
+  };
+
+  const handleClearFilters = () => {
+    setActiveCategory("All");
+    setPriceSort(null);
+    setRatingSort(null);
+  };
+
+  const hasActiveFilters = activeCategory !== "All" || priceSort || ratingSort;
+
+  const sortedMenuItems = filteredMenuItems.sort(
+    (a, b) => a.distanceKm - b.distanceKm
+  );
+
+  if (status === "loading" && !refreshing) {
     return (
-        <LinearGradient
-            colors={isDarkMode ? colors.gradientDark : colors.gradientLight}
-            style={{ flex: 1 }}
-        >
-            <SafeAreaView style={{ flex: 1 }}>
-                <FlatList
-                    data={restaurants}
-                    renderItem={({ item }) => <FoodCard item={item} />}
-                    keyExtractor={(item) => item.id}
-                    ListHeaderComponent={renderHeader}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-                />
-            </SafeAreaView>
-        </LinearGradient>
+      <LinearGradient
+        colors={isDarkMode ? colors.gradientDark : colors.gradientLight}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <View className="items-center">
+          <ActivityIndicator size="large" color="#FF6B35" />
+          <Text
+            className={`mt-4 text-lg font-semibold ${isDarkMode ? "text-white" : "text-gray-800"}`}
+          >
+            Memuat menu...
+          </Text>
+        </View>
+      </LinearGradient>
     );
+  }
+
+  return (
+    <>
+      <View className={`pt-10 ${isDarkMode ? "bg-green-950" : "bg-green-50"}`}>
+        <AutoHide duration={10000}>
+          <View
+            className={`${isSearchFocused ? "26" : "pt-6"} pb-5 px-6 ${isDarkMode ? "bg-orange-900" : "bg-orange-100"}`}
+          >
+            <Text
+              className={`text-3xl font-bold ${isDarkMode ? "text-green-50" : "text-green-950"}`}
+            >
+              Selamat Datang! 👋
+            </Text>
+            <Text
+              className={`text-md mt-1 ${isDarkMode ? "text-green-200" : "text-green-800"}`}
+            >
+              Temukan makanan favorit Anda
+            </Text>
+          </View>
+        </AutoHide>
+        {!isSearchFocused && (
+          <TouchableOpacity
+            onPress={() => setLocationModalVisible(true)}
+            className={`flex-row items-center px-3 ${isDarkMode ? "bg-green-950" : "bg-green-100"}`}
+          >
+            <View
+              className={`p-2 rounded-full ${isDarkMode ? "bg-gray-200" : "bg-white"}`}
+            >
+              <Ionicons
+                name="location-sharp"
+                size={18}
+                color={isDarkMode ? "#34D399" : "#77aa77"}
+              />
+            </View>
+            <View className="flex-1 w-full py-2 px-4">
+              <Text
+                className={`font-semibold text-sm ${isDarkMode ? "text-green-100" : "text-green-900"}`}
+              >
+                {location}
+              </Text>
+              <Text
+                className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
+              >
+                Ganti lokasi
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View
+        className={`${isDarkMode ? "bg-gray-900" : "bg-white"} flex-row items-center gap-3 p-3`}
+      >
+        {isSearchFocused ? (
+          <View
+            className={`flex-1 flex-row items-center rounded-lg py-1 px-4 shadow-sm ${isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-100"}`}
+          >
+            <Ionicons
+              name="search"
+              size={20}
+              color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+            />
+            <TextInput
+              placeholder="Cari makanan atau restoran..."
+              className={`flex-1 ml-2 text-base ${isDarkMode ? "text-white" : "text-gray-700"}`}
+              placeholderTextColor={isDarkMode ? "#9CA3AF" : "#9CA3AF"}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus={true}
+            />
+          </View>
+        ) : (
+          <TouchableOpacity
+            className={`flex-1 flex-row items-center rounded-2xl px-5 py-4 shadow-sm ${isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-100"}`}
+            onPress={() => setIsSearchFocused(true)}
+          >
+            <Ionicons
+              name="search"
+              size={20}
+              color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+            />
+            <Text
+              className={`ml-3 text-base ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
+            >
+              Cari makanan atau restoran...
+            </Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          className={`p-4 rounded-2xl shadow-sm ${isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-100"}`}
+          onPress={toggleFilterModal}
+        >
+          <Ionicons
+            name="options-outline"
+            size={24}
+            color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+          />
+        </TouchableOpacity>
+        {isSearchFocused && (
+          <TouchableOpacity
+            onPress={() => {
+              setIsSearchFocused(false);
+              setSearchQuery("");
+            }}
+          >
+            <Text
+              className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-gray-800"}`}
+            >
+              Batal
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <Screen>
+        <View className={`h-full`}>
+          {!isSearchFocused && (
+            <>
+              <View className="flex-row mb-2">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category}
+                      className={`py-3 px-5 rounded-2xl border-2 shadow-sm ${activeCategory === category ? "bg-[#FF6B35] border-[#FF6B35] shadow-[#FF6B35]/25" : isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+                      onPress={() => setActiveCategory(category)}
+                    >
+                      <Text
+                        className={`font-semibold text-sm  ${activeCategory === category ? "text-white" : isDarkMode ? "text-gray-200" : "text-gray-700"}`}
+                      >
+                        {category}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              <View className="pb-6">
+                {/* <View className="flex-row items-center justify-between mb-4">
+                                <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>✨ Rekomendasi</Text>
+                            </View> */}
+                <FlatList
+                  // data={recommendations}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      className={`w-40 mr-4 rounded-3xl overflow-hidden shadow-lg ${isDarkMode ? "bg-gray-800 shadow-gray-900" : "bg-white shadow-gray-200"}`}
+                      onPress={() =>
+                        navigation.navigate("DetailMenu", {
+                          menuItemId: item.id,
+                        })
+                      }
+                    >
+                      <View className="relative">
+                        <Image
+                          source={{ uri: item.image }}
+                          className="w-full h-28 rounded-t-3xl"
+                        />
+                        <View className="absolute top-3 right-3 bg-black/50 px-2 py-1 rounded-full flex-row items-center">
+                          <Ionicons name="star" size={12} color="#FFD700" />
+                          <Text className="text-white text-xs ml-1 font-semibold">
+                            {item.rating}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="p-4">
+                        <Text
+                          className={`font-bold text-sm mb-1 ${isDarkMode ? "text-white" : "text-gray-800"}`}
+                          numberOfLines={1}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text className="text-[#FF6B35] font-bold text-base">
+                          {formatPrice(item.price)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  contentContainerStyle={{ paddingHorizontal: 4 }}
+                />
+              </View>
+            </>
+          )}
+          <View className="flex-row flex-wrap justify-between px-4 py-2">
+            {sortedMenuItems?.length > 0 ? (
+              sortedMenuItems.map((item) => (
+                <View key={item.id} style={{ width: "48%", marginBottom: 2 }}>
+                  <FoodCard item={item} />
+                </View>
+              ))
+            ) : (
+              <View className="flex-1 items-center justify-center mt-12">
+                <Text>tidak ada data</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Screen>
+
+      <FilterBottomSheet
+        isVisible={isFilterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        categories={categories}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        priceSort={priceSort}
+        setPriceSort={setPriceSort}
+        ratingSort={ratingSort}
+        setRatingSort={setRatingSort}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
+      />
+
+      <LocationBottomSheet
+        isVisible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+      />
+    </>
+  );
 };
 
 export default HomeScreen;

@@ -27,7 +27,7 @@ const WelcomeScreen = () => {
             <TouchableOpacity
                 className="bg-green-500 dark:bg-green-600 px-8 py-3 rounded-full shadow-lg shadow-green-200"
                 activeOpacity={0.8}
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.navigate('Auth', { screen: 'LoginTab' })}
             >
                 <Text className="text-white font-semibold text-base">Get Started</Text>
             </TouchableOpacity>
